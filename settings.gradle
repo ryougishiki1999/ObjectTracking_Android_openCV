@@ -1,0 +1,3 @@
+include ':openCVLibrary430'
+include ':app'
+rootProject.name = "ObjectTracking"
