@@ -15,6 +15,22 @@
         app:layout_constraintTop_toTopOf="parent"
         app:show_fps="true" />
 
+    <TextView
+        android:id="@+id/zzy_activity_intrinsic_txt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/white"
+        app:layout_constraintBottom_toTopOf="@+id/zzy_activity_take_photo_btn"
+        app:layout_constraintLeft_toRightOf="@+id/success_frame_count_txt" />
+
+    <TextView
+        android:id="@+id/success_frame_count_txt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/white"
+        app:layout_constraintBottom_toTopOf="@+id/zzy_activity_take_photo_btn"
+        app:layout_constraintRight_toLeftOf="@+id/zzy_activity_intrinsic_txt" />
+
     <Button
         android:id="@+id/zzy_activity_take_photo_btn"
         android:layout_width="match_parent"

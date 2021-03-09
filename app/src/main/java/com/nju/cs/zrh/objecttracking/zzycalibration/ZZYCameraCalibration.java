@@ -13,10 +13,7 @@ import org.opencv.core.TermCriteria;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * @author: Zhou RuoHeng
@@ -24,14 +21,11 @@ import java.util.Set;
  */
 public class ZZYCameraCalibration {
 
-    private final List<Mat> frameList = new ArrayList<>();
-
     private final static int BOARD_WIDTH = 9;
     private final static int BOARD_HEIGHT = 6;
     private final static int SQUARE_SIZE = 20;
     private final static int NUM_HOR_CORNERS = 9;
     private final static int NUM_VERT_CORNERS = 6;
-    private final static float SCALE = 0.25f;
     private Size boardSize;
     private Size squareSize = new Size(SQUARE_SIZE, SQUARE_SIZE);
 
@@ -43,6 +37,7 @@ public class ZZYCameraCalibration {
     private MatOfPoint2f imageCorners = new MatOfPoint2f();
     private MatOfPoint3f obj = new MatOfPoint3f();
     private Mat intrinsic = new Mat(3, 3, CvType.CV_32FC1);
+    private float[] intrinsicFloat = new float[9];
     private int boardsNumber;
     private int numCornersHor;
     private int numCornersVer;
@@ -51,7 +46,13 @@ public class ZZYCameraCalibration {
     private boolean isCalibrated = false;
 
     private ZZYCameraCalibration() {
-
+        this.boardsNumber = 8;
+        this.numCornersHor = 9;
+        this.numCornersVer = 6;
+        int numSquares = this.numCornersHor * this.numCornersVer;
+        for (int i = 0; i < numSquares; i++) {
+            obj.push_back(new MatOfPoint3f(new Point3(i / this.numCornersHor, i % this.numCornersVer, 0.0f)));
+        }
     }
 
     private static class HolderClass {
@@ -63,53 +64,28 @@ public class ZZYCameraCalibration {
     }
 
 
-    public void resolve(Map<Long, Mat> timestampToFrame, float[] intrinsicMatrix) {
-        Set<Long> timestampSet = timestampToFrame.keySet();
-        Iterator<Long> iterator = timestampSet.iterator();
-        while (iterator.hasNext()) {
-            long timestamp = iterator.next();
-            Mat frame = timestampToFrame.get(timestamp);
-            frameList.add(frame);
-        }
+    public boolean resolve(Mat frame) {
+        //return this.findChessCorners(frame);
+        boolean flag = this.findChessCorners(frame);
 
-        calibrationProcess();
-    }
-
-    private void calibrationProcess() {
-        this.boardsNumber = frameList.size();
-        this.numCornersHor = 9;
-        this.numCornersVer = 6;
-        int numSquares = this.numCornersHor * this.numCornersVer;
-        for (int i = 0; i < numSquares; i++) {
-            obj.push_back(new MatOfPoint3f(new Point3(i / this.numCornersHor, i % this.numCornersVer, 0.0f)));
-        }
-
-        for (int i = 0; i < this.boardsNumber; i++) {
-            if (!frameList.get(i).empty()) {
-                this.findChessCorners(frameList.get(i));
-            }
-        }
-
-        float[] intrinsicMatrix = new float[intrinsic.rows() * intrinsic.cols()];
         if (this.isCalibrated) {
-
             intrinsic.convertTo(intrinsic, CvType.CV_32FC1);
-            System.out.println("intrinsic Size: " + intrinsic.size());
-            intrinsic.get(0, 0, intrinsicMatrix);
+            intrinsic.get(0, 0, intrinsicFloat);
         }
 
+        return flag;
     }
 
-    private void findChessCorners(Mat frame) {
+    private boolean findChessCorners(Mat frame) {
         Mat grayImage = new Mat();
-
+        boolean found = false;
         if (this.successes < this.boardsNumber) {
 
             Imgproc.cvtColor(frame, grayImage, Imgproc.COLOR_RGBA2GRAY);
 
             Size boardSize = new Size(this.numCornersHor, this.numCornersVer);
 
-            boolean found = Calib3d.findChessboardCorners(grayImage, boardSize, imageCorners, Calib3d.CALIB_CB_ADAPTIVE_THRESH + Calib3d.CALIB_CB_NORMALIZE_IMAGE + Calib3d.CALIB_CB_FAST_CHECK);
+            found = Calib3d.findChessboardCorners(grayImage, boardSize, imageCorners, Calib3d.CALIB_CB_ADAPTIVE_THRESH + Calib3d.CALIB_CB_NORMALIZE_IMAGE + Calib3d.CALIB_CB_FAST_CHECK);
 
             if (found) {
                 TermCriteria term = new TermCriteria(TermCriteria.EPS | TermCriteria.MAX_ITER, 30, 0.1);
@@ -118,13 +94,17 @@ public class ZZYCameraCalibration {
                 imageCorners = new MatOfPoint2f();
                 this.objectPoints.add(obj);
                 grayImage.copyTo(this.savedImage);
+                this.successes++;
+
+                if (this.successes == this.boardsNumber) {
+                    this.myCalibrateCamera();
+                }
+                return found;
             }
-            this.successes++;
+
         }
 
-        if (this.successes == this.boardsNumber) {
-            this.myCalibrateCamera();
-        }
+        return found;
     }
 
     private void myCalibrateCamera() {
@@ -138,4 +118,15 @@ public class ZZYCameraCalibration {
     }
 
 
+    public Mat getIntrinsic() {
+        return intrinsic;
+    }
+
+    public float[] getIntrinsicFloat() {
+        return intrinsicFloat;
+    }
+
+    public boolean isCalibrated() {
+        return isCalibrated;
+    }
 }

@@ -1,11 +1,13 @@
 package com.nju.cs.zrh.objecttracking.zzycalibration;
 
 import android.Manifest;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -36,9 +38,10 @@ public class ZZYCalibrationActivity extends AppCompatActivity implements CameraB
 
     private Mat Rgba;
     private CameraBridgeViewBase mCVCamera;
-    private static int savedFrameCount = 0;
+    private static int successFrameCount = 0;
     private final static int FRAME_NUM_THRESHOLD = 8;
-    private final float[] intrinsicMatrix = new float[9];
+    private Mat intrinsic = new Mat(3, 3, CvType.CV_32FC1);
+    private final float[] intrinsicFloat = new float[9];
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -64,6 +67,8 @@ public class ZZYCalibrationActivity extends AppCompatActivity implements CameraB
     private ZZYCameraCalibration processor;
 
     private Button takePhotoBtn;
+    private TextView successFrameCountTxt;
+    private TextView intrinsicTxt;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -81,17 +86,42 @@ public class ZZYCalibrationActivity extends AppCompatActivity implements CameraB
         takePhotoBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (savedFrameCount < FRAME_NUM_THRESHOLD) {
-                    timestampToFrame.put(MyDateUtils.getCurTimestamp(), Rgba.clone());
-                    savedFrameCount++;
+                if (successFrameCount < FRAME_NUM_THRESHOLD) {
+                    boolean flag = ZZYCameraCalibration.getInstance().resolve(Rgba);
+                    if (flag) {
+                        successFrameCount++;
+                    }
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("success frames: \n");
+                    sb.append(successFrameCount);
+                    successFrameCountTxt.setText(sb.toString());
+                } else {
+                    String txt = "the num of frames is enough";
+                    successFrameCountTxt.setTextColor(Color.RED);
+                    successFrameCountTxt.setText(txt);
                 }
 
-                if (savedFrameCount == FRAME_NUM_THRESHOLD) {
-                    processor = ZZYCameraCalibration.getInstance();
-                    processor.resolve(timestampToFrame, intrinsicMatrix);
+                if (ZZYCameraCalibration.getInstance().isCalibrated()) {
+                    intrinsic = ZZYCameraCalibration.getInstance().getIntrinsic();
+                    intrinsic.get(0, 0, intrinsicFloat);
+
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("intrinsic matrix: \n");
+                    for (int i = 0; i < 3; i++) {
+                        for (int j = i * 3; j < i * 3 + 3; j++) {
+                            sb.append(intrinsicFloat[j]).append(", ");
+                        }
+                        sb.append("\n");
+                    }
+
+                    intrinsicTxt.setText(sb.toString());
                 }
             }
         });
+
+        successFrameCountTxt = findViewById(R.id.success_frame_count_txt);
+        intrinsicTxt = findViewById(R.id.zzy_activity_intrinsic_txt);
+
     }
 
 
