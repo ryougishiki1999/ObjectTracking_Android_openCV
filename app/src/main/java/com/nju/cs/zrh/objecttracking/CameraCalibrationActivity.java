@@ -30,13 +30,10 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.videoio.VideoCapture;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -59,7 +56,8 @@ public class CameraCalibrationActivity extends AppCompatActivity implements Came
 
     private Mat Rgba;
     private CameraBridgeViewBase mCVCamera;
-    private int backCameraIdx = 0;
+    private int cameraIdx;
+    private final static int BACK_CAMERA_IDX = 0;
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
@@ -68,7 +66,8 @@ public class CameraCalibrationActivity extends AppCompatActivity implements Came
                 case LoaderCallbackInterface.SUCCESS:
                     Log.i(TAG, "openCV Camera loads successfully");
                     if (mCVCamera != null) {
-                        mCVCamera.setCameraIndex(backCameraIdx);
+                        cameraIdx = BACK_CAMERA_IDX;
+                        mCVCamera.setCameraIndex(cameraIdx);
                         mCVCamera.setCameraPermissionGranted();
                         mCVCamera.enableView();
                     }
@@ -175,7 +174,13 @@ public class CameraCalibrationActivity extends AppCompatActivity implements Came
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         long timestamp = MyDateUtils.getCurTimestamp();
         Rgba = inputFrame.rgba();
+
+        if (cameraIdx == BACK_CAMERA_IDX) {
+            Core.rotate(Rgba, Rgba, Core.ROTATE_90_CLOCKWISE);
+        }
+
         Mat mRgba = Rgba.clone();
+
 
         if (startFlag) {
             if (MyDateUtils.getTimeDistance(startTimestamp, timestamp) <= INTERVAL) {

@@ -14,6 +14,7 @@ import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfKeyPoint;
+import org.opencv.core.Point;
 import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.features2d.ORB;
 import org.opencv.video.DISOpticalFlow;
@@ -103,6 +104,8 @@ public class MyFeaturePointUtils {
             DMatch dMatch = goodMatchesArray[i];
             int queryIdx = dMatch.queryIdx;
             int trainIdx = dMatch.trainIdx;
+            Point points1 = keyPoints1Array[queryIdx].pt;
+
         }
 
         return res;

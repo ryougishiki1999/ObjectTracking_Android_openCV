@@ -40,6 +40,10 @@
         <activity android:name=".CameraCalibrationActivity">
 
         </activity>
+
+        <activity android:name=".zzycalibration.ZZYCalibrationActivity">
+
+        </activity>
     </application>
 
 </manifest>

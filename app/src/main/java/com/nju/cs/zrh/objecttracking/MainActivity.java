@@ -8,6 +8,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
+import com.nju.cs.zrh.objecttracking.zzycalibration.ZZYCalibrationActivity;
+
 import org.opencv.android.OpenCVLoader;
 
 public class MainActivity extends AppCompatActivity {
@@ -15,6 +17,7 @@ public class MainActivity extends AppCompatActivity {
     private final static String TAG = "MainActivity";
 
     private Button cameraCalibrationBtn;
+    private Button zzyCalibrationBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,10 +26,18 @@ public class MainActivity extends AppCompatActivity {
 
         cameraCalibrationBtn = findViewById(R.id.camera_calibration_btn);
         cameraCalibrationBtn.setOnClickListener(new View.OnClickListener() {
-
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this, CameraCalibrationActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        zzyCalibrationBtn = findViewById(R.id.zzy_calibration_btn);
+        zzyCalibrationBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, ZZYCalibrationActivity.class);
                 startActivity(intent);
             }
         });
