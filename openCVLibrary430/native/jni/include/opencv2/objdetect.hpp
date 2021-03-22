@@ -362,7 +362,7 @@ https://hal.inria.fr/inria-00548512/document/
 
 https://en.wikipedia.org/wiki/Histogram_of_oriented_gradients
 
-https://software.intel.com/en-us/ipp-dev-reference-histogram-of-oriented-gradients-hog-descriptor
+https://software.intel.com/en-us/ipp-deprecated-reference-histogram-of-oriented-gradients-hog-descriptor
 
 http://www.learnopencv.com/histogram-of-oriented-gradients
 

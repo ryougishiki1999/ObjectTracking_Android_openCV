@@ -243,7 +243,7 @@ CV_EXPORTS_W const String& getBuildInformation();
 
 /** @brief Returns library version string
 
-For example "3.4.1-dev".
+For example "3.4.1-deprecated".
 
 @sa getMajorVersion, getMinorVersion, getRevisionVersion
 */

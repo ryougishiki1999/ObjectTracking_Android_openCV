@@ -183,7 +183,7 @@ public:
     };
     CV_WRAP int vendorID() const;
     // FIXIT
-    // dev.isAMD() doesn't work for OpenCL CPU devices from AMD OpenCL platform.
+    // deprecated.isAMD() doesn't work for OpenCL CPU devices from AMD OpenCL platform.
     // This method should use platform name instead of vendor name.
     // After fix restore code in arithm.cpp: ocl_compare()
     CV_WRAP inline bool isAMD() const { return vendorID() == VENDOR_AMD; }

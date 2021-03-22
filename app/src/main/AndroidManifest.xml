@@ -3,11 +3,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.nju.cs.zrh.objecttracking">
 
-    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
+    <uses-permission android:name="android.permission.CAMERA" />
 
     <uses-feature
         android:name="android.hardware.camera"
@@ -29,21 +30,31 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.ObjectTracking">
-        <activity android:name=".MainActivity">
+        <activity
+            android:name=".MainActivity"
+            android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".CameraCalibrationActivity">
+        <activity
+            android:name=".cameracalibration.CameraCalibrationActivity"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.ObjectTracking">
+
 
         </activity>
 
-        <activity android:name=".zzycalibration.ZZYCalibrationActivity">
+        <activity android:name=".deprecated.zzycalibration.ZZYCalibrationActivity">
+
+        </activity>
+
+        <activity
+            android:name=".TestActivity"
+            android:screenOrientation="landscape">
 
         </activity>
     </application>
-
 </manifest>

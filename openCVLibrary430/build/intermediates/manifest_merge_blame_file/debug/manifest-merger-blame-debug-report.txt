@@ -6,8 +6,8 @@
 6
 7    <uses-sdk
 8        android:minSdkVersion="21"
-8-->C:\Users\ZhouRuoHeng\AndroidStudioProjects\ObjectTracking\openCVLibrary430\java\AndroidManifest.xml
+8-->C:\Users\RyougiShiki\Desktop\Project\android\object_tracking_android_opencv\openCVLibrary430\java\AndroidManifest.xml
 9        android:targetSdkVersion="29" />
-9-->C:\Users\ZhouRuoHeng\AndroidStudioProjects\ObjectTracking\openCVLibrary430\java\AndroidManifest.xml
+9-->C:\Users\RyougiShiki\Desktop\Project\android\object_tracking_android_opencv\openCVLibrary430\java\AndroidManifest.xml
 10
 11</manifest>

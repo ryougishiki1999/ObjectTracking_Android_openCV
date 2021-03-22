@@ -471,8 +471,8 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
     protected void AllocateCache()
     {
         /* 2021/3/9 modify openCV source */
-        //mCacheBitmap = Bitmap.createBitmap(mFrameWidth, mFrameHeight, Bitmap.Config.ARGB_8888);
-        mCacheBitmap = Bitmap.createBitmap(mFrameHeight, mFrameWidth, Bitmap.Config.ARGB_8888);
+        mCacheBitmap = Bitmap.createBitmap(mFrameWidth, mFrameHeight, Bitmap.Config.ARGB_8888);
+        //mCacheBitmap = Bitmap.createBitmap(mFrameHeight, mFrameWidth, Bitmap.Config.ARGB_8888); // screen orientation portrait
     }
 
     public interface ListItemAccessor {

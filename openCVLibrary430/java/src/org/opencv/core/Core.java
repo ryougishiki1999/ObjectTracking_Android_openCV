@@ -358,7 +358,7 @@ public class Core {
     /**
      * Returns library version string
      *
-     * For example "3.4.1-dev".
+     * For example "3.4.1-deprecated".
      *
      * SEE: getMajorVersion, getMinorVersion, getRevisionVersion
      * @return automatically generated

@@ -5,12 +5,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
 
-import com.nju.cs.zrh.objecttracking.zzycalibration.ZZYCalibrationActivity;
+import com.nju.cs.zrh.objecttracking.cameracalibration.CameraCalibrationActivity;
 
 import org.opencv.android.OpenCVLoader;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -23,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        
         cameraCalibrationBtn = findViewById(R.id.camera_calibration_btn);
         cameraCalibrationBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -37,7 +39,7 @@ public class MainActivity extends AppCompatActivity {
         zzyCalibrationBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, ZZYCalibrationActivity.class);
+                Intent intent = new Intent(MainActivity.this, TestActivity.class);
                 startActivity(intent);
             }
         });
