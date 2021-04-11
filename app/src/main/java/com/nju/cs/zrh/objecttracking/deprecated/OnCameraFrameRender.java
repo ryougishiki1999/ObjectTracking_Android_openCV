@@ -1,8 +1,9 @@
-package com.nju.cs.zrh.objecttracking.cameracalibration;
+package com.nju.cs.zrh.objecttracking.deprecated;
 
 import android.content.res.Resources;
 
 import com.nju.cs.zrh.objecttracking.R;
+import com.nju.cs.zrh.objecttracking.cameracalibration.CameraCalibrator;
 
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.calib3d.Calib3d;

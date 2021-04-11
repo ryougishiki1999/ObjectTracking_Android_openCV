@@ -1,4 +1,6 @@
-package com.nju.cs.zrh.objecttracking;
+package com.nju.cs.zrh.objecttracking.utils.poseestimation;
+
+import android.util.Log;
 
 import org.opencv.calib3d.Calib3d;
 import org.opencv.core.CvType;
@@ -7,33 +9,23 @@ import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfKeyPoint;
+import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.MatOfPoint3f;
 import org.opencv.core.Point;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class PoseEstimation2d2d {
+public class PoseEstimation2D2D extends PoseEstimation {
 
-    private volatile static PoseEstimation2d2d instance = null;
+    private final static String TAG = "PoseEstimation2D2D::";
 
     private Mat intrinsic = new Mat(3, 3, CvType.CV_64FC1);
 
-    private PoseEstimation2d2d(Mat intrinsic) {
-        this.intrinsic = intrinsic.clone();
+    public PoseEstimation2D2D(Mat intrinsic) {
+        this.intrinsic = intrinsic;
     }
-
-    public static PoseEstimation2d2d getInstance(Mat intrinsic) {
-        if (instance == null) {
-            synchronized (PoseEstimation2d2d.class) {
-                if (instance == null) {
-                    instance = new PoseEstimation2d2d(intrinsic);
-                }
-            }
-        }
-        return instance;
-    }
-
 
     public void estimation(MatOfKeyPoint keyPoint1, MatOfKeyPoint keyPoint2, MatOfDMatch matches, Mat R, Mat T) {
         List<Point> pointList1 = new ArrayList<>();
@@ -61,5 +53,10 @@ public class PoseEstimation2d2d {
         essentialMatrix = Calib3d.findEssentialMat(points1, points2, intrinsic, Calib3d.RANSAC);
 
         Calib3d.recoverPose(essentialMatrix, points1, points2, intrinsic, R, T);
+    }
+
+    @Override
+    public void estimation(MatOfPoint3f objectPoints, MatOfPoint2f imagePoints, Mat R, Mat T) {
+        Log.i(TAG,"wrong way in 2D2D");
     }
 }

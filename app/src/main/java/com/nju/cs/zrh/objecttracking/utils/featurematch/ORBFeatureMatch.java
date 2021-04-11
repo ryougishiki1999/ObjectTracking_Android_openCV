@@ -7,6 +7,8 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.features2d.DescriptorMatcher;
+import org.opencv.features2d.Feature2D;
+import org.opencv.features2d.Features2d;
 import org.opencv.features2d.ORB;
 
 import java.util.LinkedList;
@@ -26,6 +28,13 @@ public class ORBFeatureMatch implements FeatureMatch {
 
     private ORB orbDetector = ORB.create(nfeatures, scaleFactor, nlevels, edgeThreshold, firstLevel, WTA_k, scoreType, patchSize, fastThreshold);
     private DescriptorMatcher matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
+
+    @Override
+    public void featureDetectAndDraw(Mat img) {
+        MatOfKeyPoint keyPoint = new MatOfKeyPoint();
+        orbDetector.detect(img, keyPoint);
+        Features2d.drawKeypoints(img, keyPoint, img);
+    }
 
     @Override
     public void findFeatureMatches(Mat img1, Mat img2, MatOfKeyPoint keyPoint1, MatOfKeyPoint keyPoint2, MatOfDMatch goodMatches) {

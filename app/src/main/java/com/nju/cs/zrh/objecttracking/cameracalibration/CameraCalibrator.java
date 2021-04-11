@@ -81,7 +81,6 @@ public class CameraCalibrator {
 
     public void addCorners() {
         if (mPatternWasFound) {
-
             mCornersBuffer.add(mCorners.clone());
         }
     }

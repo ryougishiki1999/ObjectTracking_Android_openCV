@@ -44,6 +44,11 @@
             android:screenOrientation="landscape"
             android:theme="@style/Theme.ObjectTracking">
 
+        </activity>
+
+        <activity
+            android:name=".ObjectTrackingActivity"
+            android:screenOrientation="landscape">
 
         </activity>
 

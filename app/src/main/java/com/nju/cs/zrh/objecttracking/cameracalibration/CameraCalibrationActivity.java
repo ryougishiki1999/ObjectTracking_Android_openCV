@@ -20,6 +20,11 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.nju.cs.zrh.objecttracking.R;
+import com.nju.cs.zrh.objecttracking.utils.framerender.OnCameraFrameRender;
+import com.nju.cs.zrh.objecttracking.utils.framerender.PreviewFrameRender;
+import com.nju.cs.zrh.objecttracking.utils.framerender.CalibrationFrameRender;
+import com.nju.cs.zrh.objecttracking.utils.framerender.ComparisonFramdRender;
+import com.nju.cs.zrh.objecttracking.utils.framerender.UndistortionFramdRender;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -110,6 +115,7 @@ public class CameraCalibrationActivity extends AppCompatActivity implements Came
         super.onDestroy();
         if (mOpenCvCameraView != null) {
             mOpenCvCameraView.disableView();
+            mOpenCvCameraView = null;
         }
     }
 
@@ -141,12 +147,12 @@ public class CameraCalibrationActivity extends AppCompatActivity implements Came
                 return true;
             case R.id.undistortion:
                 mOnCameraFrameRender =
-                        new OnCameraFrameRender(new UndistortionFrameRender(mCalibrator));
+                        new OnCameraFrameRender(new UndistortionFramdRender(mCalibrator));
                 item.setChecked(true);
                 return true;
             case R.id.comparison:
                 mOnCameraFrameRender =
-                        new OnCameraFrameRender(new ComparisonFrameRender(mCalibrator, mWidth, mHeight, getResources()));
+                        new OnCameraFrameRender(new ComparisonFramdRender(mCalibrator, mWidth, mHeight, getResources()));
                 item.setChecked(true);
                 return true;
             case R.id.calibrate:
