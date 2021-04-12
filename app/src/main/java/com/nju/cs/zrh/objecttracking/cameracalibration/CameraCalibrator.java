@@ -162,10 +162,10 @@ public class CameraCalibrator {
         mPatternWasFound = Calib3d.findChessboardCorners(grayFrame, mPatternSize, mCorners,
                 Calib3d.CALIB_CB_ADAPTIVE_THRESH + Calib3d.CALIB_CB_NORMALIZE_IMAGE + Calib3d.CALIB_CB_FAST_CHECK);
 
-        if (mPatternWasFound) {
-            TermCriteria term = new TermCriteria(TermCriteria.EPS | TermCriteria.MAX_ITER, 30, 0.1);
-            Imgproc.cornerSubPix(grayFrame, mCorners, new Size(11, 11), new Size(-1, -1), term);
-        }
+//        if (mPatternWasFound) {
+//            TermCriteria term = new TermCriteria(TermCriteria.EPS | TermCriteria.MAX_ITER, 30, 0.1);
+//            Imgproc.cornerSubPix(grayFrame, mCorners, new Size(11, 11), new Size(-1, -1), term);
+//        }
     }
 
     private void renderFrame(Mat rgbaFrame) {
