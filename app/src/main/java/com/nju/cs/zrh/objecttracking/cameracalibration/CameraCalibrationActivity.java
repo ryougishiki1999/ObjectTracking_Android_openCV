@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.nju.cs.zrh.objecttracking.ObjectTrackingActivity;
 import com.nju.cs.zrh.objecttracking.R;
 import com.nju.cs.zrh.objecttracking.utils.framerender.OnCameraFrameRender;
 import com.nju.cs.zrh.objecttracking.utils.framerender.PreviewFrameRender;
@@ -33,7 +34,7 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
 
 public class CameraCalibrationActivity extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2, View.OnTouchListener {
-    private static final String TAG = "CameraCalibration::";
+    private static final String TAG = "CalibrationActivity";
     private final static String[] PERMISSIONS = {Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE};
     private final static int M_REQUEST_CODE = 203;
 
@@ -54,6 +55,7 @@ public class CameraCalibrationActivity extends AppCompatActivity implements Came
                     Log.i(TAG, "OpenCV loaded successfully");
                     if (mOpenCvCameraView != null) {
                         mOpenCvCameraView.setCameraPermissionGranted();
+                        mOpenCvCameraView.setMaxFrameSize(800,600);
                         mOpenCvCameraView.enableView();
                         mOpenCvCameraView.setOnTouchListener(CameraCalibrationActivity.this);
                     }
