@@ -25,7 +25,7 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 
 public class ObjectTrackingActivity extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2, View.OnTouchListener {
-    private final static String TAG = "ObjectTracking::";
+    private final static String TAG = "ObjectTrackingActivity";
     private final static String[] PERMISSIONS = {Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE};
     private final static int M_REQUEST_CODE = 203;
 
@@ -48,7 +48,9 @@ public class ObjectTrackingActivity extends AppCompatActivity implements CameraB
                     Log.i(TAG, "OpenCV loaded successfully");
                     if (mOpenCvCameraView != null) {
                         mOpenCvCameraView.setCameraPermissionGranted();
+                        mOpenCvCameraView.setMaxFrameSize(800,600);
                         mOpenCvCameraView.enableView();
+                        mOpenCvCameraView.setOnTouchListener(ObjectTrackingActivity.this);
                     }
                 }
                 break;
@@ -147,7 +149,7 @@ public class ObjectTrackingActivity extends AppCompatActivity implements CameraB
 
     @Override
     public boolean onTouch(View v, MotionEvent event) {
-        mPoseEstimationSolver.addRgbaFrame(mRgba);
+        mPoseEstimationSolver.addRgbaFrame(mRgba.clone());
         return false;
     }
 }
