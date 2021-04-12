@@ -1,5 +1,7 @@
 package com.nju.cs.zrh.objecttracking;
 
+import android.util.Log;
+
 import com.nju.cs.zrh.objecttracking.utils.transform.Transform;
 
 import org.opencv.calib3d.Calib3d;
@@ -18,6 +20,8 @@ import java.util.Iterator;
 import java.util.List;
 
 public class Triangulation {
+
+    private static final String TAG = "Triangulation";
 
     private Triangulation() {
 
@@ -66,6 +70,9 @@ public class Triangulation {
         T2.put(1, 2, rArray[8]);
         T2.put(1, 3, tArray[2]);
 
+        Log.d(TAG, "Rotation matrix:" + R.dump());
+        Log.d(TAG, "Translation matrix:" + T.dump());
+        Log.d(TAG, "T2 posture:" + T2.dump());
 
         for (DMatch dMatch : dMatchList) {
             pts1.add(Transform.pixel2cam(keyPointList1.get(dMatch.queryIdx).pt, intrinsic));

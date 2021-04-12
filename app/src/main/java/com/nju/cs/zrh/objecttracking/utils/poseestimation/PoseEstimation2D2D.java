@@ -19,7 +19,7 @@ import java.util.List;
 
 public class PoseEstimation2D2D extends PoseEstimation {
 
-    private final static String TAG = "PoseEstimation2D2D::";
+    private final static String TAG = "PoseEstimation2D2D";
 
     private Mat intrinsic = new Mat(3, 3, CvType.CV_64FC1);
 
