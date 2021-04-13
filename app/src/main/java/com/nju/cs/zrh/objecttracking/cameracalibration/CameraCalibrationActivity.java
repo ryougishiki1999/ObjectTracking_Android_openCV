@@ -219,8 +219,7 @@ public class CameraCalibrationActivity extends AppCompatActivity implements Came
     public void onCameraViewStarted(int width, int height) {
         if (mWidth != width || mHeight != height) {
             mWidth = width;
-            mHeight = height;
-            mCalibrator = new CameraCalibrator(mWidth, mHeight);
+            mHeight = height;            mCalibrator = new CameraCalibrator(mWidth, mHeight);
 
             if (CalibrationResult.tryLoad(this, mCalibrator.getCameraMatrix(), mCalibrator.getDistortionCoefficients())) {
                 mCalibrator.setCalibrated();

@@ -14,8 +14,10 @@ import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.Point;
 import org.opencv.core.Point3;
+import org.opencv.utils.Converters;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -72,6 +74,7 @@ public class Triangulation {
 
         Log.d(TAG, "Rotation matrix:" + R.dump());
         Log.d(TAG, "Translation matrix:" + T.dump());
+        Log.d(TAG, "T1 posture:" + T1.dump());
         Log.d(TAG, "T2 posture:" + T2.dump());
 
         for (DMatch dMatch : dMatchList) {
@@ -79,56 +82,59 @@ public class Triangulation {
             pts2.add(Transform.pixel2cam(keyPointList2.get(dMatch.trainIdx).pt, intrinsic));
         }
 
+        // 加入观测点
+        Point p1 = keyPointList1.get(keyPointList1.size() - 1).pt;
+        Point p2 = keyPointList2.get(keyPointList2.size() - 1).pt;
+        pts1.add(Transform.pixel2cam(p1, intrinsic));
+        pts2.add(Transform.pixel2cam(p2, intrinsic));
 
-        Mat projectionPoints1 = new Mat(2, pts1.size(), CvType.CV_64FC1);
-        Mat projectionPoints2 = new Mat(2, pts2.size(), CvType.CV_64FC1);
+        if (pts1.size() == pts2.size()) {
+
+            final int N = pts1.size();
+            Mat projectionPoints1 = new Mat(2, pts1.size(), CvType.CV_64FC1);
+            Mat projectionPoints2 = new Mat(2, pts2.size(), CvType.CV_64FC1);
+
+            for (int i = 0; i < N; i++) {
+                double x = pts1.get(i).x;
+                double y = pts1.get(i).y;
+                projectionPoints1.put(0, i, x);
+                projectionPoints1.put(1, i, y);
+                // debug
+                Log.d(TAG, "projectionPoints1 ith col:" + projectionPoints1.col(i).dump());
+            }
 
 
-        for (int i = 0; i < pts1.size(); i++) {
-            double x = pts1.get(i).x;
-            double y = pts1.get(i).y;
-            projectionPoints1.put(0, i, x);
-            projectionPoints1.put(1, i, y);
-        }
+            for (int i = 0; i < N; i++) {
+                double x = pts2.get(i).x;
+                double y = pts2.get(i).y;
+                projectionPoints2.put(0, i, x);
+                projectionPoints2.put(1, i, y);
+                // debug
+                Log.d(TAG, "projectionPoints2 ith col:" + projectionPoints2.col(i).dump());
+            }
 
+            Mat pts4D = new Mat(4, N, CvType.CV_64FC1);
 
-        for (int i = 0; i < pts2.size(); i++) {
-            double x = pts2.get(i).x;
-            double y = pts2.get(i).y;
-            projectionPoints2.put(0, i, x);
-            projectionPoints2.put(1, i, y);
-        }
+            Calib3d.triangulatePoints(T1, T2, projectionPoints1, projectionPoints2, pts4D);
 
-        int N = pts1.size();
-        Mat pts4D = new Mat(4, N, CvType.CV_64FC1);
+            for (int i = 0; i < pts4D.cols(); i++) {
+                Mat colVec = pts4D.col(i);
 
-        Calib3d.triangulatePoints(T1, T2, projectionPoints1, projectionPoints2, pts4D);
+                List<Double> colVecList = new ArrayList<>();
+                Converters.Mat_to_vector_double(colVec, colVecList);
+                double normalize = colVecList.get(3);
 
-        for (int i = 0; i < pts4D.cols(); i++) {
-            Mat colVec = pts4D.col(i);
+                double x = colVecList.get(0) / normalize;
+                double y = colVecList.get(1) / normalize;
+                double z = colVecList.get(2) / normalize;
 
-            double[] normalize = new double[1];
-            colVec.get(3, 0, normalize);
+                Point3 p = new Point3(x, y, z);
 
-            Mat scale = new Mat(4, 4, CvType.CV_64FC1);
-            scale.put(0, 0, 1 / normalize[0]);
-            scale.put(1, 1, 1 / normalize[1]);
-            scale.put(2, 2, 1 / normalize[2]);
-            scale.put(3, 3, 1 / normalize[2]);
+                points.add(p);
+            }
 
-            Core.multiply(scale, colVec, colVec);
-
-            double[] x = new double[1];
-            double[] y = new double[1];
-            double[] z = new double[1];
-
-            colVec.get(0, 0, x);
-            colVec.get(1, 0, y);
-            colVec.get(2, 0, z);
-
-            Point3 p = new Point3(x[0], y[0], z[0]);
-
-            points.add(p);
+        } else {
+            Log.e("TAG", "feature points match obtaining error");
         }
     }
 }
