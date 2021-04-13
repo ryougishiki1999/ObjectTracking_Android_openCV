@@ -20,7 +20,7 @@ import java.util.List;
 
 public class CameraCalibrator {
 
-    private static final String TAG = "CameraCalibrator::";
+    private static final String TAG = "CameraCalibrator";
 
     private final Size mPatternSize = new Size(9, 6);
     private final int mCornersSize = (int) (mPatternSize.width * mPatternSize.height);
@@ -82,6 +82,7 @@ public class CameraCalibrator {
     public void addCorners() {
         if (mPatternWasFound) {
             mCornersBuffer.add(mCorners.clone());
+            Log.d(TAG, "mCorners(found):" + mCorners.dump());
         }
     }
 
@@ -120,8 +121,10 @@ public class CameraCalibrator {
 
         for (int i = 0; i < mPatternSize.height; i++) {
             for (int j = 0; j < mPatternSize.width * cn; j += cn) {
-                positions[(int) (i * mPatternSize.width * cn + j + 0)] =
-                        (2 * (j / cn) + i % 2) * (float) mSquareSize;
+                // 水平坐标计算有误 ?
+                /*positions[(int) (i * mPatternSize.width * cn + j + 0)] =
+                        (2 * (j / cn) + i % 2) * (float) mSquareSize;*/
+                positions[(int) (i * mPatternSize.width * cn + j + 0)] = ((int) j / cn) * (float) mSquareSize;
                 positions[(int) (i * mPatternSize.width * cn + j + 1)] =
                         i * (float) mSquareSize;
                 positions[(int) (i * mPatternSize.width * cn + j + 2)] = 0;
@@ -129,6 +132,8 @@ public class CameraCalibrator {
         }
         corners.create(mCornersSize, 1, CvType.CV_32FC3);
         corners.put(0, 0, positions);
+        //debug
+        Log.d(TAG, "3D objects points:\n" + corners.dump());
     }
 
     private double computeReprojectionErrors(List<Mat> objectPoints,
@@ -162,10 +167,14 @@ public class CameraCalibrator {
         mPatternWasFound = Calib3d.findChessboardCorners(grayFrame, mPatternSize, mCorners,
                 Calib3d.CALIB_CB_ADAPTIVE_THRESH + Calib3d.CALIB_CB_NORMALIZE_IMAGE + Calib3d.CALIB_CB_FAST_CHECK);
 
-//        if (mPatternWasFound) {
-//            TermCriteria term = new TermCriteria(TermCriteria.EPS | TermCriteria.MAX_ITER, 30, 0.1);
-//            Imgproc.cornerSubPix(grayFrame, mCorners, new Size(11, 11), new Size(-1, -1), term);
-//        }
+        Log.d(TAG, "mCorner: " + mCorners.dump());
+
+        if (mPatternWasFound) {
+            TermCriteria term = new TermCriteria(TermCriteria.EPS | TermCriteria.MAX_ITER, 30, 0.1);
+            Imgproc.cornerSubPix(grayFrame, mCorners, new Size(11, 11), new Size(-1, -1), term);
+
+            Log.d(TAG, "mCorner after cornerSubPix: " + mCorners.dump());
+        }
     }
 
     private void renderFrame(Mat rgbaFrame) {
