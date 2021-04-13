@@ -20,6 +20,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Button cameraCalibrationBtn;
     private Button zzyCalibrationBtn;
+    private Button testBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +41,15 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this, ObjectTrackingActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        testBtn = findViewById(R.id.main_test_btn);
+        testBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, TestActivity.class);
                 startActivity(intent);
             }
         });
