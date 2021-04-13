@@ -19,12 +19,14 @@ import com.nju.cs.zrh.objecttracking.utils.framerender.PreviewFrameRender;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
+import org.opencv.android.JavaCameraView;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.Point;
 
-public class ObjectTrackingActivity extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2, View.OnTouchListener {
+public class ObjectTrackingActivity extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2 {
     private final static String TAG = "ObjectTrackingActivity";
     private final static String[] PERMISSIONS = {Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE};
     private final static int M_REQUEST_CODE = 203;
@@ -48,9 +50,8 @@ public class ObjectTrackingActivity extends AppCompatActivity implements CameraB
                     Log.i(TAG, "OpenCV loaded successfully");
                     if (mOpenCvCameraView != null) {
                         mOpenCvCameraView.setCameraPermissionGranted();
-                        mOpenCvCameraView.setMaxFrameSize(800,600);
+                        mOpenCvCameraView.setMaxFrameSize(800, 600);
                         mOpenCvCameraView.enableView();
-                        mOpenCvCameraView.setOnTouchListener(ObjectTrackingActivity.this);
                     }
                 }
                 break;
@@ -84,9 +85,25 @@ public class ObjectTrackingActivity extends AppCompatActivity implements CameraB
         }
 
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.object_tacking_camera);
+
         if (mOpenCvCameraView != null) {
             mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
             mOpenCvCameraView.setCvCameraViewListener(this);
+
+            mOpenCvCameraView.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    if (event.getPointerCount() <= 1) {
+                        float x = event.getX();
+                        float y = event.getY();
+                        //float xRaw= event.getRawX();
+                        //float yRaw = event.getRawY();
+                        mPoseEstimationSolver.addRgbaFrame(mRgba.clone(), new Point(x, y));
+                    }
+
+                    return false;
+                }
+            });
         }
 
         mPoseEstimationSolver = new PoseEstimationSolver(intrinsicMatrix.clone());
@@ -138,18 +155,12 @@ public class ObjectTrackingActivity extends AppCompatActivity implements CameraB
 
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
-        mRgba = inputFrame.rgba();
+        mRgba = inputFrame.rgba().clone();
         return mOnCameraFrameRender.render(inputFrame);
     }
 
     @Override
     public void onPointerCaptureChanged(boolean hasCapture) {
 
-    }
-
-    @Override
-    public boolean onTouch(View v, MotionEvent event) {
-        mPoseEstimationSolver.addRgbaFrame(mRgba.clone());
-        return false;
     }
 }
