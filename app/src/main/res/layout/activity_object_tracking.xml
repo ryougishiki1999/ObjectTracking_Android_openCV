@@ -5,7 +5,7 @@
     android:layout_height="match_parent">
 
     <org.opencv.android.JavaCameraView
-        android:id="@+id/object_tacking_camera"
+        android:id="@+id/object_tracking_camera"
         android:layout_width="800px"
         android:layout_height="600px"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -13,5 +13,21 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:show_fps="true" />
+
+    <Button
+        android:id="@+id/tracking_end_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/action_end_tracking"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintRight_toRightOf="parent" />
+
+    <Button
+        android:id="@+id/feature_match_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/action_feature_match"
+        app:layout_constraintBottom_toTopOf="@+id/tracking_end_btn"
+        app:layout_constraintRight_toRightOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

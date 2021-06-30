@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/preview_mode"
+            android:title="@string/preview_mode" />
+        <item
+            android:id="@+id/triangulation"
+            android:title="@string/triangulate"
+            app:showAsAction="ifRoom|withText" />
+        <item
+            android:id="@+id/feature_mode"
+            android:title="@string/feature_mode">
+            <menu>
+                <group android:checkableBehavior="single">
+                    <item
+                        android:id="@+id/feature_extraction"
+                        android:title="@string/action_feature_extraction" />
+                    <item
+                        android:id="@+id/feature_match"
+                        android:title="@string/action_feature_match" />
+                </group>
+            </menu>
+        </item>
+        <item
+            android:id="@+id/object_tracking_mode"
+            android:title="@string/object_tracking_mode" />
+    </group>
+</menu>

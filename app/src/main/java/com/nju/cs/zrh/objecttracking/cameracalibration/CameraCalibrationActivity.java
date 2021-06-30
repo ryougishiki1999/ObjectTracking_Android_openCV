@@ -19,12 +19,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.nju.cs.zrh.objecttracking.ObjectTrackingActivity;
 import com.nju.cs.zrh.objecttracking.R;
-import com.nju.cs.zrh.objecttracking.utils.framerender.OnCameraFrameRender;
-import com.nju.cs.zrh.objecttracking.utils.framerender.PreviewFrameRender;
 import com.nju.cs.zrh.objecttracking.utils.framerender.CalibrationFrameRender;
 import com.nju.cs.zrh.objecttracking.utils.framerender.ComparisonFramdRender;
+import com.nju.cs.zrh.objecttracking.utils.framerender.OnCameraFrameRender;
+import com.nju.cs.zrh.objecttracking.utils.framerender.PreviewFrameRender;
 import com.nju.cs.zrh.objecttracking.utils.framerender.UndistortionFramdRender;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -55,7 +54,7 @@ public class CameraCalibrationActivity extends AppCompatActivity implements Came
                     Log.i(TAG, "OpenCV loaded successfully");
                     if (mOpenCvCameraView != null) {
                         mOpenCvCameraView.setCameraPermissionGranted();
-                        mOpenCvCameraView.setMaxFrameSize(800,600);
+                        mOpenCvCameraView.setMaxFrameSize(800, 600);
                         mOpenCvCameraView.enableView();
                         mOpenCvCameraView.setOnTouchListener(CameraCalibrationActivity.this);
                     }
@@ -219,7 +218,8 @@ public class CameraCalibrationActivity extends AppCompatActivity implements Came
     public void onCameraViewStarted(int width, int height) {
         if (mWidth != width || mHeight != height) {
             mWidth = width;
-            mHeight = height;            mCalibrator = new CameraCalibrator(mWidth, mHeight);
+            mHeight = height;
+            mCalibrator = new CameraCalibrator(mWidth, mHeight);
 
             if (CalibrationResult.tryLoad(this, mCalibrator.getCameraMatrix(), mCalibrator.getDistortionCoefficients())) {
                 mCalibrator.setCalibrated();

@@ -19,14 +19,14 @@
         android:id="@+id/camera_calibration_btn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="camera calibration"
+        android:text="@string/camera_calibration_activity"
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/zzy_calibration_btn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="ZZY calibration"
+        android:text="@string/object_tracking_activity"
         app:layout_constraintTop_toBottomOf="@+id/camera_calibration_btn" />
 
     <Button

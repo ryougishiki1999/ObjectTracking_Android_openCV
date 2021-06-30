@@ -5,7 +5,6 @@ import android.util.Log;
 import com.nju.cs.zrh.objecttracking.utils.transform.Transform;
 
 import org.opencv.calib3d.Calib3d;
-import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.DMatch;
 import org.opencv.core.KeyPoint;
@@ -17,9 +16,9 @@ import org.opencv.core.Point3;
 import org.opencv.utils.Converters;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 public class Triangulation {
 
@@ -37,7 +36,9 @@ public class Triangulation {
         return HolderClass.instance;
     }
 
-    public void triangulation(MatOfKeyPoint keyPoint1, MatOfKeyPoint keyPoint2, MatOfDMatch match, Mat intrinsic, Mat R, Mat T, List<Point3> points) {
+    public void triangulation(MatOfKeyPoint keyPoint1, MatOfKeyPoint keyPoint2, MatOfDMatch match, Mat intrinsic, Mat R, Mat T, Map<Point, Point3> map) {
+        map.clear();
+
         List<DMatch> dMatchList = match.toList();
         List<KeyPoint> keyPointList1 = keyPoint1.toList();
         List<KeyPoint> keyPointList2 = keyPoint2.toList();
@@ -45,8 +46,8 @@ public class Triangulation {
         List<Point> pts1 = new ArrayList<>();
         List<Point> pts2 = new ArrayList<>();
 
-        Mat T1 = new Mat(3, 4, CvType.CV_64FC1);
-        Mat T2 = new Mat(3, 4, CvType.CV_64FC1);
+        Mat T1 = Mat.zeros(3, 4, CvType.CV_64FC1);
+        Mat T2 = Mat.zeros(3, 4, CvType.CV_64FC1);
 
         T1.put(0, 0, 1.0);
         T1.put(1, 1, 1.0);
@@ -67,32 +68,31 @@ public class Triangulation {
         T2.put(1, 2, rArray[5]);
         T2.put(1, 3, tArray[1]);
 
-        T2.put(1, 0, rArray[6]);
-        T2.put(1, 1, rArray[7]);
-        T2.put(1, 2, rArray[8]);
-        T2.put(1, 3, tArray[2]);
+        T2.put(2, 0, rArray[6]);
+        T2.put(2, 1, rArray[7]);
+        T2.put(2, 2, rArray[8]);
+        T2.put(2, 3, tArray[2]);
 
         Log.d(TAG, "Rotation matrix:" + R.dump());
         Log.d(TAG, "Translation matrix:" + T.dump());
         Log.d(TAG, "T1 posture:" + T1.dump());
         Log.d(TAG, "T2 posture:" + T2.dump());
 
-        for (DMatch dMatch : dMatchList) {
-            pts1.add(Transform.pixel2cam(keyPointList1.get(dMatch.queryIdx).pt, intrinsic));
-            pts2.add(Transform.pixel2cam(keyPointList2.get(dMatch.trainIdx).pt, intrinsic));
-        }
+        double[] K = new double[9];
+        intrinsic.get(0, 0, K);
+        Log.d(TAG, "intrinsic :" + intrinsic.dump());
+        Log.d(TAG, "K:" + Arrays.toString(K));
 
-        // 加入观测点
-        Point p1 = keyPointList1.get(keyPointList1.size() - 1).pt;
-        Point p2 = keyPointList2.get(keyPointList2.size() - 1).pt;
-        pts1.add(Transform.pixel2cam(p1, intrinsic));
-        pts2.add(Transform.pixel2cam(p2, intrinsic));
+        for (DMatch dMatch : dMatchList) {
+            pts1.add(Transform.pixel2cam(keyPointList1.get(dMatch.queryIdx).pt, K));
+            pts2.add(Transform.pixel2cam(keyPointList2.get(dMatch.trainIdx).pt, K));
+        }
 
         if (pts1.size() == pts2.size()) {
 
             final int N = pts1.size();
-            Mat projectionPoints1 = new Mat(2, pts1.size(), CvType.CV_64FC1);
-            Mat projectionPoints2 = new Mat(2, pts2.size(), CvType.CV_64FC1);
+            Mat projectionPoints1 = Mat.zeros(2, N, CvType.CV_64FC1);
+            Mat projectionPoints2 = Mat.zeros(2, N, CvType.CV_64FC1);
 
             for (int i = 0; i < N; i++) {
                 double x = pts1.get(i).x;
@@ -119,18 +119,20 @@ public class Triangulation {
 
             for (int i = 0; i < pts4D.cols(); i++) {
                 Mat colVec = pts4D.col(i);
+                Point pixel = keyPointList1.get(i).pt;
 
                 List<Double> colVecList = new ArrayList<>();
                 Converters.Mat_to_vector_double(colVec, colVecList);
                 double normalize = colVecList.get(3);
 
-                double x = colVecList.get(0) / normalize;
-                double y = colVecList.get(1) / normalize;
-                double z = colVecList.get(2) / normalize;
+                if (Math.abs(normalize - 0.0) > 1e-6) {
+                    double x = colVecList.get(0) / normalize;
+                    double y = colVecList.get(1) / normalize;
+                    double z = colVecList.get(2) / normalize;
 
-                Point3 p = new Point3(x, y, z);
-
-                points.add(p);
+                    Point3 p = new Point3(x, y, z);
+                    map.put(pixel, p);
+                }
             }
 
         } else {

@@ -5,20 +5,22 @@ import com.nju.cs.zrh.objecttracking.PoseEstimationSolver;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.core.Mat;
 
-public class PoseEstimationFrameRender extends FrameRender {
+public class FeatureMatchFrameRender extends FrameRender {
 
     private PoseEstimationSolver mPoseEstimationSolver;
+    private Mat result;
 
-    public PoseEstimationFrameRender(PoseEstimationSolver mPoseEstimationSolver) {
+    public FeatureMatchFrameRender(PoseEstimationSolver mPoseEstimationSolver) {
         this.mPoseEstimationSolver = mPoseEstimationSolver;
     }
 
     @Override
     public Mat render(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         Mat rgbaFrame = inputFrame.rgba();
-        Mat grayFrame = inputFrame.gray();
 
-        mPoseEstimationSolver.processFrame(rgbaFrame);
-        return rgbaFrame;
+        result = new Mat(rgbaFrame.size(), rgbaFrame.type());
+        mPoseEstimationSolver.renderFeatureMatchFrame(rgbaFrame.clone(), result);
+
+        return result;
     }
 }

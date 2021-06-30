@@ -70,8 +70,7 @@ public class CameraCalibrator {
         Calib3d.calibrateCamera(objectPoints, mCornersBuffer, mImageSize,
                 mCameraMatrix, mDistortionCoefficients, rvecs, tvecs, mFlags);
 
-        mIsCalibrated = Core.checkRange(mCameraMatrix)
-                && Core.checkRange(mDistortionCoefficients);
+        mIsCalibrated = Core.checkRange(mCameraMatrix) && Core.checkRange(mDistortionCoefficients);
 
         mRms = computeReprojectionErrors(objectPoints, rvecs, tvecs, reprojectionErrors);
         Log.i(TAG, String.format("Average re-projection error: %f", mRms));

@@ -24,18 +24,20 @@ public class PoseEstimation3D2D extends PoseEstimation {
     }
 
     @Override
-    public void estimation(MatOfKeyPoint keyPoint1, MatOfKeyPoint keyPoint2, MatOfDMatch matches, Mat R, Mat T) {
-        Log.i(TAG, "wrong way in 3D3D");
+    public boolean estimation(MatOfKeyPoint keyPoint1, MatOfKeyPoint keyPoint2, MatOfDMatch matches, Mat R, Mat T) {
+        Log.d(TAG, "wrong way in 3D3D");
+        return false;
     }
 
 
     @Override
-    public void estimation(MatOfPoint3f objectPoints, MatOfPoint2f imagePoints, Mat R, Mat T) {
+    public boolean estimation(MatOfPoint3f objectPoints, MatOfPoint2f imagePoints, Mat R, Mat T) {
         Mat r = new Mat(3, 1, CvType.CV_64FC1);
         Mat t = new Mat(3, 1, CvType.CV_64FC1);
 
         Calib3d.solvePnP(objectPoints, imagePoints, intrinsic, distCoeffs, r, t, false, Calib3d.SOLVEPNP_EPNP);
         Calib3d.Rodrigues(r, R);
         T = t.clone();
+        return true;
     }
 }

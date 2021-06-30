@@ -1,15 +1,15 @@
 package com.nju.cs.zrh.objecttracking.cameracalibration;
 
-import org.opencv.core.Mat;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
+import org.opencv.core.Mat;
+
 public abstract class CalibrationResult {
     private static final String SAVING_FILE = "camera_calibration";
-    private static final String TAG = "CalibrationResult::";
+    private static final String TAG = "CalibrationResult";
 
     private static final int CAMERA_MATRIX_ROWS = 3;
     private static final int CAMERA_MATRIX_COLS = 3;

@@ -13,4 +13,26 @@
     <string name="please_wait">Please, wait</string>
     <string name="original">Original</string>
     <string name="undistorted">Undistorted</string>
+
+    <string name="action_triangulate">Triangulation</string>
+    <string name="triangulate">Triangulate</string>
+    <string name="feature_mode">Feature mode</string>
+    <string name="action_feature_extraction">Feature Extraction</string>
+    <string name="action_feature_match">Feature Match</string>
+    <string name="object_tracking_mode">Object Tracking</string>
+
+    <string name="first_sample">capture first frame, please continue</string>
+    <string name="second_sample">capture second frame, enable to process</string>
+    <string name="restart">Restart the process</string>
+
+    <string name="match_sample">set up match frame</string>
+    <string name="wait_triangulate">Need to Estimate Depth before.</string>
+    <string name="end_match">End Feature Match</string>
+    <string name="camera_calibration_activity">Camera calibration</string>
+    <string name="object_tracking_activity">Object Tracking</string>
+
+    <string name="fulfill_triangulate">Triangulate completes</string>
+    <string name="restart_triangulate">Triangulate failed, restart process</string>
+    <string name="action_end_tracking">action_end_tracking</string>
+
 </resources>
