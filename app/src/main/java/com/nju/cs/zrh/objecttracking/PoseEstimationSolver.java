@@ -8,7 +8,7 @@ import androidx.annotation.NonNull;
 
 import com.nju.cs.zrh.objecttracking.utils.Numerical;
 import com.nju.cs.zrh.objecttracking.utils.featurematch.FeatureMatch;
-import com.nju.cs.zrh.objecttracking.utils.featurematch.ORBFeatureMatch;
+import com.nju.cs.zrh.objecttracking.utils.featurematch.SIFTMatch;
 import com.nju.cs.zrh.objecttracking.utils.poseestimation.OnPoseEstimation;
 import com.nju.cs.zrh.objecttracking.utils.poseestimation.PoseEstimation2D2D;
 import com.nju.cs.zrh.objecttracking.utils.transform.Transform;
@@ -17,7 +17,9 @@ import org.opencv.android.Utils;
 import org.opencv.calib3d.Calib3d;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
+import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfDouble;
 import org.opencv.core.MatOfKeyPoint;
@@ -52,7 +54,8 @@ public class PoseEstimationSolver {
 
     private static final int cntThreshold = 30;
     private LinkedList<Mat> resultList = new LinkedList<>();
-    private FeatureMatch mFeatureMatch = new ORBFeatureMatch();
+    //private FeatureMatch mFeatureMatch = new ORBFeatureMatch();
+    private FeatureMatch mFeatureMatch = new SIFTMatch();
     private OnPoseEstimation mOnPoseEstimation;
 
     private int width;
@@ -72,7 +75,7 @@ public class PoseEstimationSolver {
     private double fy;
     private double cx;
     private double cy;
-    private Mat distortion = new Mat(3, 3, CvType.CV_64FC1);
+    private Mat distortion = new Mat(5, 1, CvType.CV_64FC1);
     private List<Double> distortionList = new ArrayList<>();
     private double k1;
     private double k2;
@@ -84,28 +87,36 @@ public class PoseEstimationSolver {
     private Mat transformMatrixBackup = new Mat(4, 4, CvType.CV_64FC1);
 
     private double lastError = 0.0;
-    private static final int frameInterval = 10;
-    private static final double filterProportion = 0.8;
+    private static final int FrameInterval = 3;
+    private static final double FilterProportion = 0.8;
     private int frameIntervalCnt = 0;
     private Point curPixel;
-    //private Mat lastFrame = new Mat();
+
+    private Mat lastFrame = null;
     private MatOfKeyPoint lastKeyPoint = null;
     private Mat lastDescriptor = null;
-    private MatOfKeyPoint keyPointBackup = null;
-    private Mat descriptorBackup = null;
+    private MatOfKeyPoint lastKeyPointBackup = null;
+    private Mat lastDescriptorBackup = null;
+    private MatOfDMatch matchMat = null;
 
-    private static final int radius = 16;
+    private static final int radius = 12;
     private static final int thickness = -1;
     private static final int lineType = Imgproc.LINE_8;
 
     private int totalCnt = 0;
+    private int successCnt = 0;
+    private int failureCnt = 0;
     private List<Mat> inliers = new ArrayList<>();
-
+    private List<Point> trackingPixelList = new ArrayList<>();
+    private List<Mat> transformMatrixList = new ArrayList<>();
+    private List<Mat> matchFrameList = new ArrayList<>();
 
     private Mat original = new Mat();
     private LinkedList<Mat> triangulationFrameList = new LinkedList<>();
     private Mat triangulation1;
     private Mat triangulation2;
+    private MatOfKeyPoint triangulationKeypoint1;
+    private MatOfKeyPoint triangulationKeypoint2;
     private Point targetPixel;
     private Point3 targetPoint;
     private Double depth;
@@ -133,7 +144,6 @@ public class PoseEstimationSolver {
         for (int i = 0; i < 9; i++) {
             intrinsicList.add(i, intrinsicArray[i]);
         }
-        ;
 
         fx = intrinsicList.get(0);
         fy = intrinsicList.get(4);
@@ -193,13 +203,14 @@ public class PoseEstimationSolver {
 //                return true;
 //            }
 //        }
+
         int rows1 = descriptor1.rows();
         int rows2 = descriptor2.rows();
 
         double curProportion1 = rows1 / (double) rows2;
         double curProportion2 = rows2 / (double) rows1;
 
-        if (curProportion1 >= filterProportion && curProportion2 >= filterProportion) {
+        if (curProportion1 >= FilterProportion && curProportion2 >= FilterProportion) {
             return true;
         } else {
             Log.d(TAG, "descriptors deviation excessively");
@@ -232,24 +243,27 @@ public class PoseEstimationSolver {
 
         //this.mFeatureMatch.drawMatches(this.curMatchFrame, img, this.curMatchFrameKeyPoint, keyPoint, this.curMatchDescriptor, descriptor, result);
 
-        if (filterByDescriptors(this.curMatchDescriptor, descriptor)) {
-            this.mFeatureMatch.drawMatches(this.curMatchFrame, img, this.curMatchFrameKeyPoint, keyPoint, this.curMatchDescriptor, descriptor, result);
-        } else {
-            Mat m1 = new Mat(rgbaFrame.rows(), rgbaFrame.cols() / 2, rgbaFrame.type());
-            Features2d.drawKeypoints(this.curMatchFrame, this.curMatchFrameKeyPoint, m1);
-            Mat m2 = new Mat(rgbaFrame.rows(), rgbaFrame.cols() / 2, rgbaFrame.type());
-            Features2d.drawKeypoints(img, keyPoint, m2);
-
-            m1.copyTo(result.colRange(new Range(0, result.cols() / 2)));
-            m2.copyTo(result.colRange(new Range(result.cols() / 2, result.cols())));
-        }
+//        if (filterByDescriptors(this.curMatchDescriptor, descriptor)) {
+//            this.mFeatureMatch.drawMatches(this.curMatchFrame, img, this.curMatchFrameKeyPoint, keyPoint, this.curMatchDescriptor, descriptor, result);
+//        } else {
+//            Mat m1 = new Mat(rgbaFrame.rows(), rgbaFrame.cols() / 2, rgbaFrame.type());
+//            Features2d.drawKeypoints(this.curMatchFrame, this.curMatchFrameKeyPoint, m1);
+//            Mat m2 = new Mat(rgbaFrame.rows(), rgbaFrame.cols() / 2, rgbaFrame.type());
+//            Features2d.drawKeypoints(img, keyPoint, m2);
+//
+//            m1.copyTo(result.colRange(new Range(0, result.cols() / 2)));
+//            m2.copyTo(result.colRange(new Range(result.cols() / 2, result.cols())));
+//        }
+        MatOfKeyPoint curFrameKeyPoint = new MatOfKeyPoint(this.curMatchFrameKeyPoint.clone());
+        this.mFeatureMatch.drawMatches(this.curMatchFrame, img, curFrameKeyPoint, keyPoint, this.curMatchDescriptor, descriptor, result);
+        return;
     }
 
     public boolean renderMotionFrame(@NonNull Mat rgbaFrame) {
 
         this.frameIntervalCnt++;
 
-        if (this.frameIntervalCnt < frameInterval) {
+        if (this.frameIntervalCnt < FrameInterval) {
             return false;
         }
 
@@ -260,23 +274,45 @@ public class PoseEstimationSolver {
 
         this.mFeatureMatch.findKeyPointsAndDescriptors(rgbaFrame, curKeyPoint, curDescriptor);
 
+        MatOfDMatch match = new MatOfDMatch();
+        List<KeyPoint> lastBackupKeyPointList = this.lastKeyPoint.toList();
+        List<KeyPoint> curBackupKeyPointList = curKeyPoint.toList();
+
+        /**
+         * 相邻关键帧应该差别不应太大
+         */
         if (filterByDescriptors(this.lastDescriptor, curDescriptor)) {
 
-            MatOfDMatch match = new MatOfDMatch();
-            this.mFeatureMatch.findFeatureMatchesByDesc(this.lastDescriptor, curDescriptor, match);
+        } else {
+            return false;
+        }
 
+        if (this.mFeatureMatch.findMatchesByDesc(this.lastDescriptor, curDescriptor, this.lastKeyPoint, curKeyPoint, match)) {
             if (this.poseEstimation(this.lastKeyPoint, curKeyPoint, match)) {
 
-                this.keyPointBackup = new MatOfKeyPoint(this.lastKeyPoint);
-                this.descriptorBackup = this.lastDescriptor.clone();
+                this.matchMat.fromList(match.toList());
+                this.triangulationKeypoint1.fromList(this.lastKeyPoint.toList());
+                this.triangulationKeypoint2.fromList(curKeyPoint.toList());
 
-                this.lastKeyPoint = new MatOfKeyPoint(curKeyPoint);
+                this.lastKeyPointBackup.fromList(lastBackupKeyPointList);
+                this.lastDescriptorBackup = this.lastDescriptor.clone();
+
+                this.lastKeyPoint.fromList(curBackupKeyPointList);
                 this.lastDescriptor = curDescriptor.clone();
+
                 return true;
             } else {
+                /**
+                 * 涉及位姿计算，但ret value为false，代表未改变transform Matrix,肯定改变了this.lastKeypoint
+                 */
+                this.lastKeyPoint.fromList(lastBackupKeyPointList);
                 return false;
             }
         } else {
+            /**
+             * 搜寻匹配对数过少，尚未涉及位姿估计,可能改变了this.lastKeyPoint
+             */
+            this.lastKeyPoint.fromList(lastBackupKeyPointList);
             return false;
         }
     }
@@ -284,45 +320,66 @@ public class PoseEstimationSolver {
     public void renderTrackingFrame(@NonNull Mat rgbaFrame) {
 
         if (renderMotionFrame(rgbaFrame)) {
+            this.totalCnt += 1;
 
-            Mat R = new Mat();
-            Mat T = new Mat();
+            Mat R = new Mat(3, 3, CvType.CV_64FC1);
+            Mat T = new Mat(3, 1, CvType.CV_64FC1);
 
             Transform.TransformConvertToRT(this.transformMatrix, R, T);
 
+            MatOfPoint3f targetPointMat = new MatOfPoint3f(targetPoint);
             MatOfPoint2f curPixelMat = new MatOfPoint2f();
 
-            MatOfPoint3f targetPointMat = new MatOfPoint3f(targetPoint);
-            Mat rVec = new Mat();
-            Mat tVec = T.clone();
-
-
+            MatOfDouble rVec = new MatOfDouble();
+            MatOfDouble tVec = new MatOfDouble(T);
             MatOfDouble distCoeffs = new MatOfDouble(distortion);
 
             Calib3d.Rodrigues(R, rVec);
-            Log.d(TAG, "R: " + R.dump());
-            Log.d(TAG, "rVec:" + rVec.dump());
+            Log.d(TAG, "tracking R: \n" + R.dump());
+            Log.d(TAG, "tracking T \n" + T.dump());
+            Log.d(TAG, "rVec: \n" + rVec.dump());
+            Log.d(TAG, "tVec: \n" + tVec.dump());
 
             Calib3d.projectPoints(targetPointMat, rVec, tVec, intrinsic, distCoeffs, curPixelMat);
 
             Point[] curPixels = curPixelMat.toArray();
             curPixel = curPixels[0];
 
-            Log.d(TAG, "curPixel " + curPixel.x + ", " + curPixel.y);
-            Log.i(TAG, "curPixel " + curPixel.x + ", " + curPixel.y);
-
-            totalCnt += 1;
-
             if ((curPixel.x >= 0 && curPixel.x <= this.width) && (curPixel.y >= 0 && curPixel.y <= this.height)) {
-                Imgproc.circle(rgbaFrame, curPixel, radius, new Scalar(255, 0, 0, 255), thickness, lineType);
-                Mat result = rgbaFrame.clone();
+                this.successCnt += 1;
+                Mat result = new Mat();
+                result = rgbaFrame.clone();
+                Imgproc.circle(result, curPixel, radius, new Scalar(255, 0, 0, 255), thickness, lineType);
                 this.inliers.add(result);
+                this.trackingPixelList.add(curPixel);
+
+                this.transformMatrixList.add(this.transformMatrix);
+                Mat matchFrame = new Mat();
+                Features2d.drawMatches(this.lastFrame, this.triangulationKeypoint1, result, this.triangulationKeypoint2, this.matchMat, matchFrame, Scalar.all(-1), Scalar.all(-1), new MatOfByte(), Features2d.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS);
+                this.matchFrameList.add(matchFrame);
+
+                this.lastFrame = result.clone();
+
+                rgbaFrame = result;
+
             } else {
-                this.lastDescriptor = this.descriptorBackup;
-                this.lastKeyPoint = this.keyPointBackup;
-                this.transformMatrix = this.transformMatrixBackup;
+                /**
+                 * 通过特征匹配和位姿计算，结果仍偏离可能值，进行回溯
+                 */
+                this.failureCnt += 1;
+                this.lastKeyPoint.fromList(this.lastKeyPointBackup.toList());
+                this.lastDescriptor = this.lastDescriptorBackup.clone();
+                this.transformMatrix = this.transformMatrixBackup.clone();
+
+                Log.d(TAG, "trace back:" + transformMatrix.dump());
             }
+            return;
+        } else {
+            this.totalCnt += 1;
+            return;
         }
+
+
 //        MatOfKeyPoint keyPoint1 = new MatOfKeyPoint();
 //        MatOfKeyPoint keyPoint2 = new MatOfKeyPoint();
 //        MatOfDMatch match = new MatOfDMatch();
@@ -432,6 +489,71 @@ public class PoseEstimationSolver {
             Utils.matToBitmap(this.inliers.get(i), bmp);
             this.saveBMP2Gallery(bmp, picName);
         }
+
+        File statics = new File(galleryPath, "statics.txt");
+        try {
+            statics.createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        File transFile = new File(galleryPath, "transforms.txt");
+        try {
+            transFile.createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("intrinsic: ").append(this.intrinsic.dump()).append('\n');
+        sb.append("discoeffs: ").append(this.distortion.dump()).append('\n');
+        sb.append("target Point: ").append(this.targetPoint.toString()).append('\n');
+        sb.append("total cnt: ").append(this.totalCnt).append('\n');
+        sb.append("success cnt: ").append(this.successCnt).append('\n');
+        sb.append("failure cnt: ").append(this.failureCnt).append('\n');
+
+        for (int i = 0; i < this.trackingPixelList.size(); i++) {
+            Point p = trackingPixelList.get(i);
+            sb.append(i).append(" ").append(p.x).append(",").append(p.y).append('\n');
+        }
+
+
+        try {
+            FileOutputStream fos = new FileOutputStream(statics);
+
+            try {
+                fos.write(sb.toString().getBytes());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            fos = new FileOutputStream(transFile);
+
+            sb = new StringBuilder();
+
+            for (int i = 0; i < this.transformMatrixList.size(); i++) {
+                Mat transform = transformMatrixList.get(i);
+                sb.append(i).append(": \n").append(transform.dump()).append("\n\n");
+            }
+
+            try {
+                fos.write(sb.toString().getBytes());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            fos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        for (int i = 0; i < this.matchFrameList.size(); i++) {
+            String picName = "match" + i;
+            Bitmap bmp = Bitmap.createBitmap(this.matchFrameList.get(i).cols(), this.matchFrameList.get(i).rows(), Bitmap.Config.ARGB_8888);
+            Utils.matToBitmap(this.matchFrameList.get(i), bmp);
+            this.saveBMP2Gallery(bmp, picName);
+        }
+
     }
 
     private void saveBMP2Gallery(Bitmap bmp, String picName) {
@@ -475,26 +597,24 @@ public class PoseEstimationSolver {
 
     private boolean poseEstimation(@NonNull MatOfKeyPoint keyPoint1, @NonNull MatOfKeyPoint keyPoint2, @NonNull MatOfDMatch match) {
 
-        Mat RDelta = new Mat();
-        Mat TDelta = new Mat();
+        Mat RDelta = new Mat(3, 3, CvType.CV_64FC1);
+        Mat TDelta = new Mat(3, 1, CvType.CV_64FC1);
 
         if (this.mOnPoseEstimation.estimation(keyPoint1, keyPoint2, match, RDelta, TDelta)) {
 
+//            Log.d(TAG, "Rotation Matrix:" + RDelta.dump());
+//            Log.d(TAG, "Translation Vector" + TDelta.dump());
             Mat transformDelta = Mat.zeros(4, 4, CvType.CV_64FC1);
-
-            Log.d(TAG, "Rotation Matrix:" + RDelta.dump());
-            Log.d(TAG, "Translation Vector" + TDelta.dump());
-
             Transform.convertRTToTransform(RDelta, TDelta, transformDelta);
 
             Log.d(TAG, "transformation delta " + transformDelta.dump());
-
             this.transformMatrixBackup = this.transformMatrix.clone();
 
             Log.d(TAG, "before, transformation matrix: " + transformMatrix.dump());
             Mat resultMatrix = new Mat();
-            Core.gemm(transformDelta, transformMatrix, 1.0, new Mat(), 0.0, resultMatrix);
-            transformMatrix = resultMatrix.clone();
+            Core.gemm(transformDelta, this.transformMatrix, 1.0, new Mat(), 0.0, resultMatrix);
+            //transformMatrix = resultMatrix.clone();
+            resultMatrix.copyTo(transformMatrix);
             Log.d(TAG, "after, transformation matrix: " + transformMatrix.dump());
 
             return true;
@@ -504,11 +624,20 @@ public class PoseEstimationSolver {
         }
     }
 
+    private void initTransformMatrix() {
+        Mat R = Mat.eye(3, 3, CvType.CV_64FC1);
+        Mat T = Mat.zeros(3, 1, CvType.CV_64FC1);
+        Transform.convertRTToTransform(R, T, this.transformMatrix);
+        this.transformMatrixBackup = this.transformMatrix.clone();
+    }
 
     private void initTriangulate() {
         this.initTransformMatrix();
 
         this.totalCnt = 0;
+        this.successCnt = 0;
+        this.failureCnt = 0;
+
         this.inliers.clear();
 
         this.triangulation1 = this.triangulationFrameList.get(0).clone();
@@ -517,15 +646,7 @@ public class PoseEstimationSolver {
         this.original = this.triangulation1.clone();
         Imgproc.circle(this.original, this.targetPixel, radius, new Scalar(0, 0, 255, 255), thickness, lineType);
 
-        //lastFrame = triangulation2.clone();
-
         this.triangulationFrameList.clear();
-    }
-
-    private void initTransformMatrix() {
-        Mat R = Mat.eye(3, 3, CvType.CV_64FC1);
-        Mat T = Mat.zeros(3, 1, CvType.CV_64FC1);
-        Transform.convertRTToTransform(R, T, this.transformMatrix);
     }
 
     public boolean triangulateEntry() {
@@ -536,7 +657,6 @@ public class PoseEstimationSolver {
             if (this.triangulateKeyPoints(triangulation1, triangulation2)) {
                 this.computeDepth();
                 this.computeTargetPoint();
-
                 return true;
             } else {
                 return false;
@@ -559,30 +679,45 @@ public class PoseEstimationSolver {
         this.mFeatureMatch.findKeyPointsAndDescriptors(img1, keyPoint1, descriptor1);
         this.mFeatureMatch.findKeyPointsAndDescriptors(img2, keyPoint2, descriptor2);
 
-        if (this.filterByDescriptors(descriptor1, descriptor2)) {
+        List<KeyPoint> curBackupKeyPointList = keyPoint2.toList();
 
-            this.mFeatureMatch.findFeatureMatchesByDesc(descriptor1, descriptor2, match);
+        /***
+         * SIFT Feature Match
+         */
 
+        if (this.mFeatureMatch.findMatchesByDesc(descriptor1, descriptor2, keyPoint1, keyPoint2, match)) {
             if (this.poseEstimation(keyPoint1, keyPoint2, match)) {
-
-                this.lastKeyPoint = new MatOfKeyPoint(keyPoint2);
-                this.lastDescriptor = descriptor2.clone();
-
-                this.descriptorBackup = this.lastDescriptor;
-                this.keyPointBackup = this.lastKeyPoint;
 
                 Mat R = new Mat();
                 Mat T = new Mat();
 
                 Transform.TransformConvertToRT(this.transformMatrix, R, T);
-
                 Triangulation.getInstance().triangulation(keyPoint1, keyPoint2, match, intrinsic, R, T, triangulationResult);
 
+                this.lastFrame = new Mat();
+
+                this.lastKeyPoint = new MatOfKeyPoint();
+                this.lastKeyPoint.fromList(curBackupKeyPointList);
+                this.lastDescriptor = descriptor2.clone();
+
+                this.lastKeyPointBackup = new MatOfKeyPoint();
+                this.lastKeyPointBackup.fromList(curBackupKeyPointList);
+                this.lastDescriptor = descriptor2.clone();
+
+                this.matchMat = new MatOfDMatch(match);
+                this.triangulationKeypoint1 = new MatOfKeyPoint(keyPoint1);
+                this.triangulationKeypoint2 = new MatOfKeyPoint(keyPoint2);
                 return true;
             } else {
+                /**
+                 * 位姿估计错误，未改变transformMatrix, keyPoint2肯定变化，重启过程无需重置KeyPoint2
+                 */
                 return false;
             }
         } else {
+            /**
+             * 为涉及位姿计算，但KeyPoint2有可能变化,重启过程无需重置KeyPoint2
+             */
             return false;
         }
     }
@@ -673,13 +808,20 @@ public class PoseEstimationSolver {
     private void computeTargetPoint() {
         double x, y, z;
         z = depth;
-        Mat pixelCoordinatePixel = Mat.ones(3, 1, CvType.CV_64FC1);
-        pixelCoordinatePixel.put(0, 0, targetPixel.x);
-        pixelCoordinatePixel.put(1, 0, targetPixel.y);
+
+        Mat pixelCoordinatePixel = Mat.zeros(3, 1, CvType.CV_64FC1);
+        pixelCoordinatePixel.put(0, 0, targetPixel.x * z);
+        pixelCoordinatePixel.put(1, 0, targetPixel.y * z);
+        pixelCoordinatePixel.put(2, 0, z);
         Log.d(TAG, "pixelCoordinatePixel" + pixelCoordinatePixel.dump());
+
 
         Mat intrinsicInverse = intrinsic.inv();
         Log.d(TAG, "inverse Intrinsic" + intrinsicInverse.dump());
+
+//        Mat test = new Mat();
+//        Core.gemm(intrinsicInverse, intrinsic, 1.0, new Mat(), 0.0, test);
+//        Log.d(TAG, "test inverse: " + test.dump());
 
         Mat cameraCoordinatePoint = new Mat(3, 1, CvType.CV_64FC1);
         Core.gemm(intrinsicInverse, pixelCoordinatePixel, 1.0, new Mat(), 0.0, cameraCoordinatePoint);
@@ -694,10 +836,62 @@ public class PoseEstimationSolver {
         List<Double> worldPointList = new ArrayList<>();
         Converters.Mat_to_vector_double(worldCoordinatePoint, worldPointList);
 
-        x = z * worldPointList.get(0);
-        y = z * worldPointList.get(1);
+        x = worldPointList.get(0);
+        y = worldPointList.get(1);
+        z = worldPointList.get(2);
 
         targetPoint = new Point3(x, y, z);
+
+        /**
+         *  test targetPoint
+         */
+        Mat RTest = Mat.eye(3, 3, CvType.CV_64FC1);
+        Mat TTest = Mat.zeros(3, 1, CvType.CV_64FC1);
+        Mat rvecTest = new Mat();
+        Calib3d.Rodrigues(RTest, rvecTest);
+
+        Log.d(TAG, "rvecTest: \n" + rvecTest.dump());
+        Log.d(TAG, "TTest: \n" + TTest.dump());
+
+        MatOfPoint3f objectPoint = new MatOfPoint3f(targetPoint);
+        MatOfPoint2f imagePoint = new MatOfPoint2f();
+        MatOfDouble disCoeffs = new MatOfDouble(distortion);
+        Calib3d.projectPoints(objectPoint, rvecTest, TTest, intrinsic, disCoeffs, imagePoint);
+
+        List<Point> imagePointList = imagePoint.toList();
+        Point targetImagePoint = imagePointList.get(0);
+
+        Imgproc.circle(this.triangulation1, targetImagePoint, radius, new Scalar(255, 0, 0, 255), thickness, lineType);
+        this.inliers.add(this.triangulation1.clone());
+        this.trackingPixelList.add(targetImagePoint);
+        this.successCnt++;
+
+        /**
+         * test triangulate 2nd frame
+         */
+
+        Mat R = new Mat(3, 3, CvType.CV_64FC1);
+        Mat T = new Mat(3, 1, CvType.CV_64FC1);
+        Log.d(TAG, "test triangulate, transform: \n" + this.transformMatrix.dump());
+        Transform.TransformConvertToRT(this.transformMatrix, R, T);
+        Log.d(TAG, "test triangulate, transform: \n" + this.transformMatrix.dump());
+        Log.d(TAG, "test triangulate, R: \n" + R.dump());
+        Log.d(TAG, "test triangulate, T: \n" + T.dump());
+
+        Calib3d.Rodrigues(R, rvecTest);
+        Log.d(TAG, "rvecTest: \n" + rvecTest.dump());
+        Calib3d.projectPoints(objectPoint, rvecTest, T, intrinsic, disCoeffs, imagePoint);
+        imagePointList = imagePoint.toList();
+        targetImagePoint = imagePointList.get(0);
+        Imgproc.circle(this.triangulation2, targetImagePoint, radius, new Scalar(255, 0, 0, 255), thickness, lineType);
+        this.inliers.add(this.triangulation2.clone());
+        this.trackingPixelList.add(targetImagePoint);
+        this.successCnt++;
+
+        this.lastFrame = this.triangulation2.clone();
+        Mat matchFrame = new Mat();
+        Features2d.drawMatches(this.triangulation1, this.triangulationKeypoint1, this.triangulation2, this.triangulationKeypoint2, this.matchMat, matchFrame, Scalar.all(-1), Scalar.all(-1), new MatOfByte(), Features2d.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS);
+        this.matchFrameList.add(matchFrame);
     }
 
     public Double getDepth() {

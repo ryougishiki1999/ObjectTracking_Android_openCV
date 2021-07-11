@@ -25,7 +25,7 @@ public class PoseEstimation2D2D extends PoseEstimation {
     private Mat intrinsic = new Mat(3, 3, CvType.CV_64FC1);
 
     private final static int NUM_THRESHOLD = 8;
-    private static final double prob = 0.99;
+    private static final double prob = 0.9995;
     private static final double threshold = 1.0;
 
     public PoseEstimation2D2D(Mat intrinsic) {
@@ -34,10 +34,14 @@ public class PoseEstimation2D2D extends PoseEstimation {
 
     public boolean estimation(@NonNull MatOfKeyPoint keyPoint1, @NonNull MatOfKeyPoint keyPoint2, @NonNull MatOfDMatch matches, Mat R, Mat T) {
 
+        List<DMatch> matchList = matches.toList();
+
+        if (matchList.size() == 0) {
+            return false;
+        }
+
         List<Point> pointList1 = new ArrayList<>();
         List<Point> pointList2 = new ArrayList<>();
-
-        List<DMatch> matchList = matches.toList();
 
         if (matchList.size() < NUM_THRESHOLD) {
             Log.d(TAG, "num of match lesser than NUM THRESHOLD");
@@ -60,7 +64,7 @@ public class PoseEstimation2D2D extends PoseEstimation {
 //        Mat fundamentalMatrix = new Mat();
 //        fundamentalMatrix = Calib3d.findFundamentalMat(points1, points2, Calib3d.RANSAC);
 
-        Mat essentialMatrix = new Mat(3, 3, CvType.CV_64FC1);
+        Mat essentialMatrix = new Mat();
         essentialMatrix = Calib3d.findEssentialMat(points1, points2, intrinsic, Calib3d.RANSAC, prob, threshold);
 
         Calib3d.recoverPose(essentialMatrix, points1, points2, intrinsic, R, T);

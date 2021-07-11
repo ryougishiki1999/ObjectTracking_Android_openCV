@@ -43,7 +43,7 @@ public class ORBFeatureMatch implements FeatureMatch {
     }
 
     @Override
-    public void findFeatureMatchesByDesc(@NonNull Mat descriptor1, @NonNull Mat descriptor2, MatOfDMatch goodMatch) {
+    public void findMatchesByDesc(@NonNull Mat descriptor1, @NonNull Mat descriptor2, MatOfDMatch goodMatch) {
 
         MatOfDMatch matches = new MatOfDMatch();
 
@@ -57,6 +57,7 @@ public class ORBFeatureMatch implements FeatureMatch {
             if (dist < minDist) minDist = dist;
             if (dist > maxDist) maxDist = dist;
         }
+
         // 筛选合适匹配
         LinkedList<DMatch> goodMachList = new LinkedList<>();
         for (int i = 0; i < matchList.size(); i++) {
@@ -70,7 +71,12 @@ public class ORBFeatureMatch implements FeatureMatch {
     }
 
     @Override
-    public void findFeatureMatches(@NonNull Mat img1, @NonNull Mat img2, MatOfDMatch goodMatch) {
+    public boolean findMatchesByDesc(@NonNull Mat descriptor1, @NonNull Mat descriptor2, @NonNull MatOfKeyPoint keyPoint1, @NonNull MatOfKeyPoint keyPoint2, MatOfDMatch goodMatch) {
+        return false;
+    }
+
+    @Override
+    public void findMatches(@NonNull Mat img1, @NonNull Mat img2, MatOfDMatch goodMatch) {
 
         MatOfKeyPoint keyPoint1 = new MatOfKeyPoint();
         MatOfKeyPoint keyPoint2 = new MatOfKeyPoint();
@@ -80,7 +86,7 @@ public class ORBFeatureMatch implements FeatureMatch {
         this.findKeyPointsAndDescriptors(img1, keyPoint1, descriptor1);
         this.findKeyPointsAndDescriptors(img2, keyPoint2, descriptor2);
 
-        this.findFeatureMatchesByDesc(descriptor1, descriptor2, goodMatch);
+        this.findMatchesByDesc(descriptor1, descriptor2, goodMatch);
     }
 
 
@@ -95,7 +101,7 @@ public class ORBFeatureMatch implements FeatureMatch {
     public void drawMatches(@NonNull Mat img1, @NonNull Mat img2, @NonNull MatOfKeyPoint keyPoint1, @NonNull MatOfKeyPoint keyPoint2, @NonNull Mat descriptor1, @NonNull Mat descriptor2, Mat result) {
 
         MatOfDMatch match = new MatOfDMatch();
-        this.findFeatureMatchesByDesc(descriptor1, descriptor2, match);
+        this.findMatchesByDesc(descriptor1, descriptor2, match);
 
         // Draw Matches
         Features2d.drawMatches(img1, keyPoint1, img2, keyPoint2, match, result, Scalar.all(-1), Scalar.all(-1), new MatOfByte(), Features2d.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS);

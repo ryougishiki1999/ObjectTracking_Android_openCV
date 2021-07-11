@@ -339,18 +339,22 @@ public class ObjectTrackingActivity extends AppCompatActivity implements CameraB
                 if (mPoseEstimationSolver.triangulateEntry()) {
                     (Toast.makeText(this, res.getString(R.string.fulfill_triangulate), Toast.LENGTH_SHORT)).show();
                     mDepthEstimationState = DepthEstimationState.ESTABLISHED;
-                    mOnCameraFrameRender = new OnCameraFrameRender(new MotionFrameRender(mPoseEstimationSolver));
+                    mOnCameraFrameRender = new OnCameraFrameRender(new TrackingFrameRender(mPoseEstimationSolver));
+
+                    (Toast.makeText(this, "start object tracking...", Toast.LENGTH_SHORT)).show();
+                    mMenu.findItem(R.id.object_tracking_mode).setChecked(true);
                 } else {
                     (Toast.makeText(this, res.getString(R.string.restart_triangulate), Toast.LENGTH_SHORT)).show();
                     mOnCameraFrameRender = new OnCameraFrameRender(new PreviewFrameRender());
                 }
                 return true;
             case R.id.object_tracking_mode:
-                if (mDepthEstimationState != DepthEstimationState.ESTABLISHED) {
-                    (Toast.makeText(this, res.getString(R.string.wait_triangulate), Toast.LENGTH_SHORT)).show();
-                    return true;
-                }
-                mOnCameraFrameRender = new OnCameraFrameRender(new TrackingFrameRender(mPoseEstimationSolver));
+//                if (mDepthEstimationState != DepthEstimationState.ESTABLISHED) {
+//                    (Toast.makeText(this, res.getString(R.string.wait_triangulate), Toast.LENGTH_SHORT)).show();
+//                    return true;
+//                }
+//                mOnCameraFrameRender = new OnCameraFrameRender(new TrackingFrameRender(mPoseEstimationSolver));
+                (Toast.makeText(this, "Entry Deprecated now...", Toast.LENGTH_SHORT)).show();
                 item.setChecked(true);
                 return true;
             default:

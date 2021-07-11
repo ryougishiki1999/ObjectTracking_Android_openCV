@@ -146,6 +146,9 @@ public class CameraCalibrator {
         int totalPoints = 0;
         for (int i = 0; i < objectPoints.size(); i++) {
             MatOfPoint3f points = new MatOfPoint3f(objectPoints.get(i));
+
+            Log.d(TAG, "rvec: \n" + rvecs.get(i).dump());
+            Log.d(TAG, "tvec: \n" + tvecs.get(i).dump());
             Calib3d.projectPoints(points, rvecs.get(i), tvecs.get(i),
                     mCameraMatrix, distortionCoefficients, cornersProjected);
             error = Core.norm(mCornersBuffer.get(i), cornersProjected, Core.NORM_L2);

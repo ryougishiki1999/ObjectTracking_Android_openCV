@@ -11,9 +11,11 @@ public interface FeatureMatch {
 
     void findKeyPointsAndDescriptors(@NonNull Mat img, MatOfKeyPoint keyPoint, Mat descriptors);
 
-    void findFeatureMatchesByDesc(@NonNull Mat descriptor1, @NonNull Mat descriptor2, MatOfDMatch goodMatch);
+    void findMatchesByDesc(@NonNull Mat descriptor1, @NonNull Mat descriptor2, MatOfDMatch goodMatch);
 
-    void findFeatureMatches(@NonNull Mat img1, @NonNull Mat img2, MatOfDMatch goodMatch);
+    boolean findMatchesByDesc(@NonNull Mat descriptor1, @NonNull Mat descriptor2, @NonNull MatOfKeyPoint keyPoint1, @NonNull MatOfKeyPoint keyPoint2, MatOfDMatch goodMatch);
+
+    void findMatches(@NonNull Mat img1, @NonNull Mat img2, MatOfDMatch goodMatch);
 
     void drawKeyPoints(@NonNull Mat img);
 
