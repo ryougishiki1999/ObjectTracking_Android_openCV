@@ -37,6 +37,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -261,13 +262,16 @@ public class PoseEstimationSolver {
 
     public boolean renderMotionFrame(@NonNull Mat rgbaFrame) {
 
-        this.frameIntervalCnt++;
-
-        if (this.frameIntervalCnt < FrameInterval) {
-            return false;
-        }
-
-        this.frameIntervalCnt = 0;
+        /***
+         * change
+         */
+//        this.frameIntervalCnt++;
+//
+//        if (this.frameIntervalCnt < FrameInterval) {
+//            return false;
+//        }
+//
+//        this.frameIntervalCnt = 0;
 
         MatOfKeyPoint curKeyPoint = new MatOfKeyPoint();
         Mat curDescriptor = new Mat();
@@ -281,11 +285,11 @@ public class PoseEstimationSolver {
         /**
          * 相邻关键帧应该差别不应太大
          */
-        if (filterByDescriptors(this.lastDescriptor, curDescriptor)) {
-
-        } else {
-            return false;
-        }
+//        if (filterByDescriptors(this.lastDescriptor, curDescriptor)) {
+//
+//        } else {
+//            return false;
+//        }
 
         if (this.mFeatureMatch.findMatchesByDesc(this.lastDescriptor, curDescriptor, this.lastKeyPoint, curKeyPoint, match)) {
             if (this.poseEstimation(this.lastKeyPoint, curKeyPoint, match)) {
@@ -317,7 +321,7 @@ public class PoseEstimationSolver {
         }
     }
 
-    public void renderTrackingFrame(@NonNull Mat rgbaFrame) {
+    public boolean renderTrackingFrame(@NonNull Mat rgbaFrame) {
 
         if (renderMotionFrame(rgbaFrame)) {
             this.totalCnt += 1;
@@ -327,7 +331,7 @@ public class PoseEstimationSolver {
 
             Transform.TransformConvertToRT(this.transformMatrix, R, T);
 
-            MatOfPoint3f targetPointMat = new MatOfPoint3f(targetPoint);
+            final MatOfPoint3f targetPointMat = new MatOfPoint3f(targetPoint);
             MatOfPoint2f curPixelMat = new MatOfPoint2f();
 
             MatOfDouble rVec = new MatOfDouble();
@@ -361,6 +365,7 @@ public class PoseEstimationSolver {
                 this.lastFrame = result.clone();
 
                 rgbaFrame = result;
+                return true;
 
             } else {
                 /**
@@ -372,11 +377,12 @@ public class PoseEstimationSolver {
                 this.transformMatrix = this.transformMatrixBackup.clone();
 
                 Log.d(TAG, "trace back:" + transformMatrix.dump());
+                return false;
             }
-            return;
+
         } else {
             this.totalCnt += 1;
-            return;
+            return false;
         }
 
 
@@ -468,9 +474,12 @@ public class PoseEstimationSolver {
 
     public void saveTrackingResult() {
 
+        Calendar cur = Calendar.getInstance();
+        String folderPath = galleryPath + cur.get(Calendar.MONTH) + "_" + (cur.get(Calendar.DATE) + 1) + "_" + String.valueOf(System.currentTimeMillis());
         File file = null;
         try {
-            file = new File(galleryPath);
+
+            file = new File(folderPath);
             if (!file.exists()) {
                 file.mkdir();
             }
@@ -481,23 +490,23 @@ public class PoseEstimationSolver {
 
         Bitmap savedBMP = Bitmap.createBitmap(original.cols(), original.rows(), Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(original, savedBMP);
-        saveBMP2Gallery(savedBMP, "original");
+        saveBMP2Gallery(savedBMP, "original", folderPath);
 
         for (int i = 0; i < this.inliers.size(); i++) {
             String picName = "tracking" + i;
             Bitmap bmp = Bitmap.createBitmap(this.inliers.get(i).cols(), this.inliers.get(i).rows(), Bitmap.Config.ARGB_8888);
             Utils.matToBitmap(this.inliers.get(i), bmp);
-            this.saveBMP2Gallery(bmp, picName);
+            this.saveBMP2Gallery(bmp, picName, folderPath);
         }
 
-        File statics = new File(galleryPath, "statics.txt");
+        File statics = new File(folderPath, "statics.txt");
         try {
             statics.createNewFile();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        File transFile = new File(galleryPath, "transforms.txt");
+        File transFile = new File(folderPath, "transforms.txt");
         try {
             transFile.createNewFile();
         } catch (IOException e) {
@@ -551,18 +560,18 @@ public class PoseEstimationSolver {
             String picName = "match" + i;
             Bitmap bmp = Bitmap.createBitmap(this.matchFrameList.get(i).cols(), this.matchFrameList.get(i).rows(), Bitmap.Config.ARGB_8888);
             Utils.matToBitmap(this.matchFrameList.get(i), bmp);
-            this.saveBMP2Gallery(bmp, picName);
+            this.saveBMP2Gallery(bmp, picName, folderPath);
         }
 
     }
 
-    private void saveBMP2Gallery(Bitmap bmp, String picName) {
+    private void saveBMP2Gallery(Bitmap bmp, final String picName, final String folderPath) {
 
         File file = null;
         FileOutputStream outputStream = null;
 
         try {
-            file = new File(galleryPath, picName + ".jpg");
+            file = new File(folderPath, picName + ".jpg");
 
             outputStream = new FileOutputStream(file);
 
@@ -613,8 +622,8 @@ public class PoseEstimationSolver {
             Log.d(TAG, "before, transformation matrix: " + transformMatrix.dump());
             Mat resultMatrix = new Mat();
             Core.gemm(transformDelta, this.transformMatrix, 1.0, new Mat(), 0.0, resultMatrix);
-            //transformMatrix = resultMatrix.clone();
-            resultMatrix.copyTo(transformMatrix);
+            transformMatrix = resultMatrix.clone();
+            //resultMatrix.copyTo(transformMatrix);
             Log.d(TAG, "after, transformation matrix: " + transformMatrix.dump());
 
             return true;
@@ -622,6 +631,7 @@ public class PoseEstimationSolver {
             Log.d(TAG, "pose estimation failed!");
             return false;
         }
+
     }
 
     private void initTransformMatrix() {
@@ -853,7 +863,7 @@ public class PoseEstimationSolver {
         Log.d(TAG, "rvecTest: \n" + rvecTest.dump());
         Log.d(TAG, "TTest: \n" + TTest.dump());
 
-        MatOfPoint3f objectPoint = new MatOfPoint3f(targetPoint);
+        final MatOfPoint3f objectPoint = new MatOfPoint3f(targetPoint);
         MatOfPoint2f imagePoint = new MatOfPoint2f();
         MatOfDouble disCoeffs = new MatOfDouble(distortion);
         Calib3d.projectPoints(objectPoint, rvecTest, TTest, intrinsic, disCoeffs, imagePoint);

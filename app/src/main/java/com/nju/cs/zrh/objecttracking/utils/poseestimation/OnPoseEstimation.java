@@ -20,8 +20,6 @@ public class OnPoseEstimation {
         return mPoseEstimation.estimation(keyPoint1, keyPoint2, matches, R, T);
     }
 
-    
-
     public boolean estimation(MatOfPoint3f objectPoints, MatOfPoint2f imagePoints, Mat R, Mat T) {
         return mPoseEstimation.estimation(objectPoints, imagePoints, R, T);
     }

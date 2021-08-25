@@ -124,9 +124,9 @@ public class SIFTMatch implements FeatureMatch {
 
         matches.fromList(goodMatchList);
         matchList = matches.toList();
-        if (matchList.size() < PtCount1) {
-            return false;
-        }
+//        if (matchList.size() < PtCount1) {
+//            return false;
+//        }
 
         List<KeyPoint> keyPointList1 = keyPoint1.toList();
         List<KeyPoint> keyPointList2 = keyPoint2.toList();
@@ -174,9 +174,9 @@ public class SIFTMatch implements FeatureMatch {
             }
         }
 
-        if (RRMatches.size() < PtCount2) {
-            return false;
-        }
+//        if (RRMatches.size() < PtCount2) {
+//            return false;
+//        }
 
         keyPoint1.fromList(RRKeyPointList1);
         keyPoint2.fromList(RRKeyPointList2);

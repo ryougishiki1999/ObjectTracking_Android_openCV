@@ -35,6 +35,7 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
+import org.opencv.utils.Converters;
 
 public class ObjectTrackingActivity extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2 {
     private final static String TAG = "ObjectTrackingActivity";
@@ -55,6 +56,9 @@ public class ObjectTrackingActivity extends AppCompatActivity implements CameraB
 
     private Button mTrakingEndBtn;
     private DepthEstimationState mDepthEstimationState = DepthEstimationState.CLOSE;
+
+    private Button mCaptureBtn;
+
 
     private enum DepthEstimationState {
         CLOSE(0, ""),
@@ -195,6 +199,22 @@ public class ObjectTrackingActivity extends AppCompatActivity implements CameraB
 
         mPoseEstimationSolver = new PoseEstimationSolver(intrinsicMatrix, distortionCoefficients);
 
+        /***
+         * change
+         */
+        mCaptureBtn = findViewById(R.id.capture_btn);
+        mCaptureBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final Resources res = getResources();
+                Mat frame = mRgba.clone();
+                if(!mPoseEstimationSolver.renderTrackingFrame(frame)){
+                    (Toast.makeText(ObjectTrackingActivity.this, "fail, try again", Toast.LENGTH_SHORT)).show();
+                }else{
+                    (Toast.makeText(ObjectTrackingActivity.this, "continue", Toast.LENGTH_SHORT)).show();
+                }
+            }
+        });
 
         mTrakingEndBtn = findViewById(R.id.tracking_end_btn);
 
@@ -339,7 +359,9 @@ public class ObjectTrackingActivity extends AppCompatActivity implements CameraB
                 if (mPoseEstimationSolver.triangulateEntry()) {
                     (Toast.makeText(this, res.getString(R.string.fulfill_triangulate), Toast.LENGTH_SHORT)).show();
                     mDepthEstimationState = DepthEstimationState.ESTABLISHED;
-                    mOnCameraFrameRender = new OnCameraFrameRender(new TrackingFrameRender(mPoseEstimationSolver));
+                    //mOnCameraFrameRender = new OnCameraFrameRender(new TrackingFrameRender(mPoseEstimationSolver));
+
+                    mOnCameraFrameRender = new OnCameraFrameRender(new PreviewFrameRender());
 
                     (Toast.makeText(this, "start object tracking...", Toast.LENGTH_SHORT)).show();
                     mMenu.findItem(R.id.object_tracking_mode).setChecked(true);
